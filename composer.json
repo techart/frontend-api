@@ -1,0 +1,24 @@
+{
+    "name": "techart/frontend-api",
+    "description": "API для доступа к файлам сборки фронтенда",
+    "authors": [
+        {
+            "name": "Techart",
+            "homepage": "http://web-techart.ru/"
+        }
+    ],
+    "autoload" : {
+        "psr-4": {
+            "Techart\\Frontend\\": "src/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0.0-dev"
+        }
+    },
+    "minimum-stability": "dev",
+    "require": {
+        "twig/twig": "^1.24"
+    }
+}
