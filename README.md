@@ -6,20 +6,7 @@
 
 ## Установка
 
-- Добавляем в composer.json проекта наш локальный репозиторий (если ещё не добавлен)
-
-```json
-{
-    "repositories": [
-        {
-            "type": "composer",
-            "url": "http://composer.gitlab.s.intranet/"
-        }
-    ]
-}
-```
-
-- Устанавливаем: `composer require 'techart/frontend-api'`
+- Устанавливаем последнюю версию из репозитория: `composer require 'techart/frontend-api'`
 
 
 ## Использование
