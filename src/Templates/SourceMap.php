@@ -7,7 +7,15 @@ class SourceMap
 	private $sourceMap = array();
 	private $src = '';
 	private $cacheFile = '';
+	private $cachePath = '';
 	private static $instance;
+
+	private function __construct($src, $cache_path) {
+		$this->src = $src;
+		$this->cacheFile = $cache_path.'/source_map.cache.php';
+		$this->cachePath = $cache_path;
+		$this->sourceMap = $this->getSourceMap();
+	}
 
 	public static function getInstance($src, $cachePath) {
 		if (self::$instance === null) {
@@ -40,14 +48,10 @@ class SourceMap
 				$name => array($path => realpath($this->src. $path))
 			)
 		);
+		$this->checkCacheDir();
+
 		$cache = "<?php return " . var_export($this->sourceMap, true) . ";";
 		file_put_contents($this->cacheFile, $cache);
-	}
-
-	private function __construct($src, $cache_path) {
-		$this->src = $src;
-		$this->cacheFile = $cache_path.'/source_map.cache.php';
-		$this->sourceMap = $this->getSourceMap();
 	}
 
 	private function getSourceMap()
@@ -59,5 +63,12 @@ class SourceMap
 			return $inc;
 		}
 		return array();
+	}
+
+	private function checkCacheDir()
+	{
+		if (!is_dir($this->cachePath)) {
+			mkdir($this->cachePath, 0777, true);
+		}
 	}
 }

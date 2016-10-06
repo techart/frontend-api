@@ -25,7 +25,7 @@ class Repository
 
 	public function cachePath()
 	{
-		return $this->factory->cachePath;
+		return $this->factory->cachePath();
 	}
 
 	private function createDefaultRenders()
