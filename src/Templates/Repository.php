@@ -30,8 +30,7 @@ class Repository
 
 	private function createDefaultRenders()
 	{
-		$this->add('default', '\Techart\Frontend\Templates\Renderer');
-		$this->add('raw', '\Techart\Frontend\Templates\Renderer', array('autoescape' => false));
+		$this->add('default', '\Techart\Frontend\Templates\Renderer', array('autoescape' => false));
 	}
 
 
