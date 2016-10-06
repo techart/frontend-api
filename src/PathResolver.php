@@ -34,7 +34,7 @@ class PathResolver
 
     public function publicPath()
     {
-        return $this->publicPath ?: $this->publicPath = str_replace($this->docRoot, '', realpath($this->frontendPath . $this->configReader()->get('buildPath')));
+        return $this->publicPath ?: $this->publicPath = str_replace($this->docRoot(), '', realpath($this->frontendPath . $this->configReader()->get('buildPath')));
     }
 
     public function settingsPath()

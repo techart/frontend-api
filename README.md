@@ -64,6 +64,4 @@ $templatesManager->render('page/main/main.html.twig', [
 ```
 
 
-подробнее см. [Wiki](wikis/home)
-
-или [Пример кода](examples/test.php)
+подробнее см. [Пример кода](examples/test.php)
