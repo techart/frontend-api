@@ -49,7 +49,7 @@ class Manager
     public function url($path)
     {
         $path = trim($path, '/');
-        $env = ($this->env->isDev() || $this->env->isHot()) ? EnvironmentInterface::DEV : EnvironmentInterface::HOT;
+        $env = ($this->env->isDev() || $this->env->isHot()) ? EnvironmentInterface::DEV : EnvironmentInterface::PROD;
         return "{$this->pathResolver->publicPath()}/{$env}/{$path}";
     }
 
