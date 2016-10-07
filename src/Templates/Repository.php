@@ -13,6 +13,16 @@ class Repository
 		$this->createDefaultRenders();
 	}
 
+	public function getRenders()
+    {
+        return $this->renders;
+    }
+
+    public function getModsList()
+    {
+        return array_keys($this->renders);
+    }
+
 	public function add($mode, $name, $params = array())
 	{
 		$this->renders[$mode] = $this->factory->createRenderer($name, $params);

@@ -16,13 +16,29 @@ class Renderer implements RendererInterface
 		$this->src = $src;
 		$this->env = $env;
 		$this->sourceMap = $sourceMap;
-		$this->twig = new \Twig_Environment($loader, $config);
-	}
+        $this->twig = new \Twig_Environment($loader, $config);
+        if (isset($config['debug'])) {
+            $this->twig->addExtension(new \Twig_Extension_Debug());
+        }
+    }
+
+	public function addGlobal($name, $value)
+    {
+        $this->twig->addGlobal($name, $value);
+    }
 
 	public function render($name, $params = array())
 	{
-		return $this->twig->render($this->find($name), $params);
+	    $path = $this->find($name);
+	    $params = $this->defaultParams($path, $params);
+		return $this->twig->render($path, $params);
 	}
+
+	protected function defaultParams($path, $params)
+    {
+        $params['__DIR__'] = dirname($path);
+        return $params;
+    }
 
 	public function renderBlock($name, $params = array())
 	{

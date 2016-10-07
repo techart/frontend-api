@@ -12,7 +12,10 @@ class Factory
 		),
 		'prod' => array(
 		),
-		'hot' => array()
+		'hot' => array(
+            'auto_reload' => true,
+            'debug' => true
+        )
 	);
 
 	private $env;

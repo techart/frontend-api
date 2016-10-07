@@ -13,7 +13,16 @@ class Manager
 	{
 		$this->repository = $repository;
 		self::$cachePath = $repository->cachePath();
+
+        foreach ($repository->getModsList() as $mode) {
+            $this->setupRendererGlobals($mode);
+        }
 	}
+
+	protected function setupRendererGlobals($mode)
+    {
+        $this->getRenderer($mode)->addGlobal('renderer', $this);
+    }
 
 	public function render($name, $params = array(), $mode = 'default')
 	{
@@ -28,6 +37,7 @@ class Manager
 	public function addRenderer($mode, $name, $params = array())
 	{
 		$this->repository->add($mode, $name, $params);
+        $this->setupRendererGlobals($mode);
 	}
 
 	public static function clearCache()
@@ -58,7 +68,7 @@ class Manager
 
 	private function processParams($params)
 	{
-		return array_merge($this->checkClosures($params), array('renderer' => $this));
+	    return $this->checkClosures($params);
 	}
 
 	private function checkClosures($params)
