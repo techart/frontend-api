@@ -61,8 +61,8 @@ class Loader extends \Twig_Loader_Filesystem
 
 
 		foreach ($this->paths[$namespace] as $path) {
-			if ($this->env->isProd() && $path = $this->sourceMap->templatePath($shortname)) {
-				return $this->cache[$name] = $path;
+			if ($this->env->isProd() && $templateCachedPath = $this->sourceMap->templatePath($shortname)) {
+				return $this->cache[$name] = $templateCachedPath;
 			}
 			if (is_file($path.'/'.$shortname)) {
 				if (false !== $realpath = realpath($path.'/'.$shortname)) {
