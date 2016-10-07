@@ -14,15 +14,15 @@ class Manager
 		$this->repository = $repository;
 		self::$cachePath = $repository->cachePath();
 
-        foreach ($repository->getModsList() as $mode) {
-            $this->setupRendererGlobals($mode);
-        }
+		foreach ($repository->getModsList() as $mode) {
+			$this->setupRendererGlobals($mode);
+		}
 	}
 
 	protected function setupRendererGlobals($mode)
-    {
-        $this->getRenderer($mode)->addGlobal('renderer', $this);
-    }
+	{
+		$this->getRenderer($mode)->addGlobal('renderer', $this);
+	}
 
 	public function render($name, $params = array(), $mode = 'default')
 	{
@@ -37,7 +37,7 @@ class Manager
 	public function addRenderer($mode, $name, $params = array())
 	{
 		$this->repository->add($mode, $name, $params);
-        $this->setupRendererGlobals($mode);
+		$this->setupRendererGlobals($mode);
 	}
 
 	public static function clearCache()
@@ -45,6 +45,7 @@ class Manager
 		if (!self::$cachePath) {
 			throw new \Exception('No cache path');
 		}
+
 		return self::recursiveClear(self::$cachePath, true);
 	}
 
@@ -68,12 +69,12 @@ class Manager
 
 	private function processParams($params)
 	{
-	    return $this->checkClosures($params);
+		return $this->checkClosures($params);
 	}
 
 	private function checkClosures($params)
 	{
-		if (!empty($params)){
+		if (!empty($params)) {
 			foreach ($params as $name => $param) {
 				if (is_callable($param)) {
 					$params[$name] = new Closure($param);

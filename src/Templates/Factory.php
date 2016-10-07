@@ -1,6 +1,7 @@
 <?php
 
 namespace Techart\Frontend\Templates;
+
 use Techart\Frontend\EnvironmentInterface;
 
 class Factory
@@ -10,12 +11,11 @@ class Factory
 			'auto_reload' => true,
 			'debug' => true,
 		),
-		'prod' => array(
-		),
+		'prod' => array(),
 		'hot' => array(
-            'auto_reload' => true,
-            'debug' => true
-        )
+			'auto_reload' => true,
+			'debug' => true,
+		),
 	);
 
 	private $env;
@@ -38,13 +38,14 @@ class Factory
 		if (!class_exists($name)) {
 			throw new \Exception('class not exist');
 		}
+
 		return new $name($this->pathResolver->frontendPath(),
-				$this->env,
-				new Loader($this->pathResolver->frontendPath(),
-						SourceMap::getInstance($this->pathResolver->frontendPath(), $this->cachePath()),
-						$this->env),
+			$this->env,
+			new Loader($this->pathResolver->frontendPath(),
 				SourceMap::getInstance($this->pathResolver->frontendPath(), $this->cachePath()),
-				array_merge($this->envConfig(), $config));
+				$this->env),
+			SourceMap::getInstance($this->pathResolver->frontendPath(), $this->cachePath()),
+			array_merge($this->envConfig(), $config));
 
 	}
 

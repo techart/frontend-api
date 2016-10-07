@@ -16,29 +16,31 @@ class Renderer implements RendererInterface
 		$this->src = $src;
 		$this->env = $env;
 		$this->sourceMap = $sourceMap;
-        $this->twig = new \Twig_Environment($loader, $config);
-        if (isset($config['debug'])) {
-            $this->twig->addExtension(new \Twig_Extension_Debug());
-        }
-    }
+		$this->twig = new \Twig_Environment($loader, $config);
+		if (isset($config['debug'])) {
+			$this->twig->addExtension(new \Twig_Extension_Debug());
+		}
+	}
 
 	public function addGlobal($name, $value)
-    {
-        $this->twig->addGlobal($name, $value);
-    }
+	{
+		$this->twig->addGlobal($name, $value);
+	}
 
 	public function render($name, $params = array())
 	{
-	    $path = $this->find($name);
-	    $params = $this->defaultParams($path, $params);
+		$path = $this->find($name);
+		$params = $this->defaultParams($path, $params);
+
 		return $this->twig->render($path, $params);
 	}
 
 	protected function defaultParams($path, $params)
-    {
-        $params['__DIR__'] = dirname($path);
-        return $params;
-    }
+	{
+		$params['__DIR__'] = dirname($path);
+
+		return $params;
+	}
 
 	public function renderBlock($name, $params = array())
 	{
@@ -58,11 +60,14 @@ class Renderer implements RendererInterface
 
 	protected function exists($path, $name)
 	{
-		if (!file_exists($this->src . $path)) return $this->src . $path;
+		if (!file_exists($this->src.$path)) {
+			return $this->src.$path;
+		}
 
 		if ($this->env->isProd()) {
 			$this->sourceMap->add($path, $name);
 		}
+
 		return $path;
 	}
 

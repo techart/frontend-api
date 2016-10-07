@@ -14,14 +14,14 @@ class Repository
 	}
 
 	public function getRenders()
-    {
-        return $this->renders;
-    }
+	{
+		return $this->renders;
+	}
 
-    public function getModsList()
-    {
-        return array_keys($this->renders);
-    }
+	public function getModsList()
+	{
+		return array_keys($this->renders);
+	}
 
 	public function add($mode, $name, $params = array())
 	{
