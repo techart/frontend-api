@@ -1,0 +1,33 @@
+{%- macro styles(values) -%}
+    {% if values %}
+        {% set result = 'style="' %}
+        {% for name, value in values %}
+            {%  if value %}
+                {% set result = result ~ "#{name}:#{value};" %}
+            {% endif %}
+        {% endfor %}
+        {% set result = result ~ '"' %}
+        {{ result }}
+    {% endif %}
+{%- endmacro -%}
+
+{%- macro classes(values) -%}
+    {% if values %} {{ values|join(' ') }} {% endif %}
+{%- endmacro -%}
+
+{%- macro attr(name, value) -%}
+    {% if value %}
+        {{ name }}="{{ value }}"
+    {% endif %}
+{%- endmacro -%}
+
+{%- macro id(value) -%}
+    {% import _self as helper %}
+    {{ helper.attr('id', value) }}
+{%- endmacro -%}
+
+{%- macro url(value) -%}
+    {% if value %}
+        url('{{ value }}')
+    {% endif %}
+{%- endmacro -%}

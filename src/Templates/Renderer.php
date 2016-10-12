@@ -16,6 +16,7 @@ class Renderer implements RendererInterface
 		$this->src = $src;
 		$this->env = $env;
 		$this->sourceMap = $sourceMap;
+		$loader->addPath(__DIR__ . '/../../views', 'api');
 		$this->twig = new \Twig_Environment($loader, $config);
 		if (isset($config['debug'])) {
 			$this->twig->addExtension(new \Twig_Extension_Debug());
@@ -38,7 +39,6 @@ class Renderer implements RendererInterface
 	protected function defaultParams($path, $params)
 	{
 		$params['__DIR__'] = dirname($path);
-
 		return $params;
 	}
 
