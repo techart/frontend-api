@@ -68,7 +68,12 @@ class SourceMap
 	private function checkCacheDir()
 	{
 		if (!is_dir($this->cachePath)) {
+			$old_mask = umask(0);
 			mkdir($this->cachePath, 0777, true);
+			if (!is_file($this->cacheFile)) {
+				file_put_contents($this->cacheFile, '');
+			}
+			umask($old_mask);
 		}
 	}
 }

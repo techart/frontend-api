@@ -25,7 +25,7 @@ class Factory
 	{
 		$this->env = $env;
 		$this->pathResolver = $pathResolver;
-		$this->config['prod']['cache'] = $this->cachePath();
+		$this->config['prod']['cache'] = new Cache($this->cachePath());
 	}
 
 	public function cachePath()
