@@ -7,11 +7,13 @@ use Techart\Frontend\Closure;
 class Manager
 {
 	private $repository;
+	private $globals;
 	private static $cachePath;
 
-	public function __construct($repository)
+	public function __construct($repository, $globals = array())
 	{
 		$this->repository = $repository;
+		$this->globals = $globals;
 		self::$cachePath = $repository->cachePath();
 
 		foreach ($repository->getModsList() as $mode) {
@@ -22,6 +24,9 @@ class Manager
 	protected function setupRendererGlobals($mode)
 	{
 		$this->getRenderer($mode)->addGlobal('renderer', $this);
+		foreach ($this->globals as $name => $value) {
+			$this->getRenderer($mode)->addGlobal($name, $value);
+		}
 	}
 
 	public function render($name, $params = array(), $mode = 'default')

@@ -31,7 +31,8 @@ class Frontend
 		return $this->templatesManager ?: $this->templatesManager = new TemplatesManager(
 			new Repository(
 				new Factory($this->env, $this->pathResolver)
-			)
+			),
+			array('assets' => $this->assets())
 		);
 	}
 
