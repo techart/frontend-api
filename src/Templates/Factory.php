@@ -11,7 +11,9 @@ class Factory
 			'auto_reload' => true,
 			'debug' => true,
 		),
-		'prod' => array(),
+		'prod' => array(
+			'auto_reload' => true,
+		),
 		'hot' => array(
 			'auto_reload' => true,
 			'debug' => true,

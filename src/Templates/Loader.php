@@ -28,6 +28,20 @@ class Loader extends \Twig_Loader_Filesystem
 		$this->paths[$namespace][] = rtrim($path, '/\\');
 	}
 
+	/**
+	 * @param string $name
+	 * @param int $time
+	 * @return bool
+	 * @throws \Twig_Error_Loader
+	 *
+	 * @ тут нужна. мы считаем что если исходника вдруг нет, то кеш актуален.
+	 *
+	 */
+	public function isFresh($name, $time)
+	{
+		return (int)@filemtime($this->findTemplate($name)) <= $time;
+	}
+
 	protected function findTemplate($name)
 	{
 		$throw = func_num_args() > 1 ? func_get_arg(1) : true;
