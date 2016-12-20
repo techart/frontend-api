@@ -29,7 +29,11 @@ class PathResolver
 
     public function docRoot()
     {
-        return $this->docRoot ?: $this->docRoot = $_SERVER['DOCUMENT_ROOT'] ?: realpath($this->frontendPath . ($this->configReader()->get('docRoot')));
+        if (!$this->docRoot) {
+            $this->docRoot = $_SERVER['DOCUMENT_ROOT'] ?: realpath($this->frontendPath . ($this->configReader()->get('docRoot')));
+            $this->docRoot = rtrim($this->docRoot, '/');
+        }
+        return $this->docRoot;
     }
 
     public function publicPath()
