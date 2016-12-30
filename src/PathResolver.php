@@ -14,6 +14,7 @@ class PathResolver
         'assetsPath' => 'assets',
         'settingsPath' => 'user.settings.js',
         'twigCachePath' => 'some/',
+        'docRoot' => '',
     );
 
     public function __construct($frontendPath, $options = array())
@@ -30,7 +31,9 @@ class PathResolver
     public function docRoot()
     {
         if (!$this->docRoot) {
-            $this->docRoot = $_SERVER['DOCUMENT_ROOT'] ?: realpath($this->frontendPath . ($this->configReader()->get('docRoot')));
+            $this->docRoot = $this->options['docRoot'] ?
+                $this->options['docRoot'] :
+                ($_SERVER['DOCUMENT_ROOT'] ?: realpath($this->frontendPath . $this->configReader()->get('docRoot')));
             $this->docRoot = rtrim($this->docRoot, '/');
         }
         return $this->docRoot;
