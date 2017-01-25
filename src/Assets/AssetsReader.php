@@ -3,7 +3,6 @@
 namespace Techart\Frontend\Assets;
 
 use Techart\Frontend\EnvironmentInterface;
-use function Techart\Frontend\realpath;
 
 class AssetsReader implements AssetsReaderInterface
 {
