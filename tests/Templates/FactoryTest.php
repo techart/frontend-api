@@ -4,6 +4,7 @@ namespace Techart\Frontend\Tests\Templates;
 
 use Techart\Frontend\Templates\RendererInterface;
 use Techart\Frontend\Templates\Factory;
+use Techart\Frontend\PathResolver;
 
 class FactoryTest extends \PHPUnit_Framework_TestCase
 {
@@ -16,7 +17,7 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
             ->setMethods(['getName', 'isProd', 'isDev', 'isHot', 'switchTo'])
             ->getMock();
         $env->method('getName')->willReturn('prod');
-        $this->factory = new Factory($env, '', '');
+        $this->factory = new Factory($env, new PathResolver('/some/path/'));
     }
 
     public function providerExistClasses()

@@ -3,68 +3,106 @@
 namespace Techart\Frontend\Tests\Templates;
 
 use Techart\Frontend\Templates\Manager;
+use Techart\Frontend\PathResolver;
 
 
 class ManagerTest extends \PHPUnit_Framework_TestCase
 {
-	private $manager;
+    private $manager;
+    private $env;
+    private $factory;
+    private $loader;
+    private $repository;
+    private $renderer;
 
-	protected function setUp()
-	{
-		parent::setUp();
-		$env = $this->getMockBuilder('Techart\Frontend\EnvironmentInterface')
-			->setMethods(['getName', 'isProd', 'isDev', 'isHot'])
-			->getMock();
-		$env->method('getName')->willReturn('prod');
+    protected function setUp()
+    {
+        parent::setUp();
+        $this->createEnv();
+        $this->createFactory();
+        $this->createLoader();
+        $this->createRepository();
+        $this->createRenderer();
 
-		$factory = $this->getMockBuilder('Techart\Frontend\Templates\Factory')
-			->setConstructorArgs([$env, '', ''])
-			->setMethods(['createRenderer'])
-			->getMock();
+        $this->manager = new Manager($this->repository);
+    }
 
-		$factory->method('createRenderer')->willReturn(true);
+    public function testAddRenderer()
+    {
+        $this->repository->expects($this->any())
+            ->method('add')
+            ->with($this->equalTo('custom'), $this->equalTo('class_name'));
 
-		$repository = $this->getMockBuilder('Techart\Frontend\Templates\Repository')
-			->setConstructorArgs([$factory])
-			->setMethods(['add', 'get', 'cachePath'])
-			->getMock();
+        $this->repository->expects($this->any())
+            ->method('get')
+            ->willReturn($this->renderer);
 
-		$renderer = $this->getMockBuilder('Techart\Frontend\Templates\Renderer')
-				->setConstructorArgs(['', $env, null, null])
-				->setMethods(['render', 'renderBlock'])
-				->getMock();
+        $this->manager->addRenderer('custom', 'class_name');
+    }
 
-		$renderer->expects($this->any())
-			->method('render')
-			->will($this->returnValue('string'));
-		$renderer->expects($this->any())
-				->method('renderBlock')
-				->will($this->returnValue('string'));
+    /**
+     * @depends testAddRenderer
+     */
+    public function testModeRender()
+    {
+        $this->repository->expects($this->any())
+            ->method('get')
+            ->withConsecutive(
+                [$this->equalTo('default')],
+                [$this->equalTo('raw')],
+                [$this->equalTo('custom')]
+            )->willReturn($this->renderer);
+        $this->manager->render('tpl_name', []);
+        $this->manager->render('tpl_name', [], 'raw');
+        $this->manager->render('tpl_name', [], 'custom');
+    }
 
-		$repository->expects($this->any())
-			->method('get')
-			->withConsecutive(
-				[$this->equalTo('default')],
-				[$this->equalTo('raw')],
-				[$this->equalTo('custom')]
-			)->willReturn($renderer);
+    private function createEnv()
+    {
+        $this->env = $this->getMockBuilder('Techart\Frontend\EnvironmentInterface')
+            ->setMethods(['getName', 'isProd', 'isDev', 'isHot', 'switchTo'])
+            ->getMock();
+        $this->env->method('getName')->willReturn('prod');
+    }
 
-		$repository->expects($this->any())
-				->method('add')
-				->with($this->equalTo('custom'), $this->equalTo('class_name'));
+    private function createFactory()
+    {
+        $this->factory = $this->getMockBuilder('Techart\Frontend\Templates\Factory')
+            ->setConstructorArgs([$this->env, new PathResolver('/some/path/')])
+            ->setMethods(['createRenderer'])
+            ->getMock();
 
-		$this->manager = new Manager($repository);
-	}
+        $this->factory->method('createRenderer')->willReturn(true);
+    }
 
-	public function testAddRenderer()
-	{
-		$this->manager->addRenderer('custom', 'class_name');
-	}
+    private function createLoader()
+    {
+        $this->loader = $this->getMockBuilder('Techart\Frontend\Templates\Loader')
+            ->setMethods(['addPath'])
+            ->disableOriginalConstructor()
+            ->getMock();
+    }
 
-	public function testModeRender()
-	{
-		$this->manager->render('tpl_name', []);
-		$this->manager->render('tpl_name', [], 'raw');
-		$this->manager->render('tpl_name', [], 'custom');
-	}
+    private function createRepository()
+    {
+        $this->repository = $this->getMockBuilder('Techart\Frontend\Templates\Repository')
+            ->setConstructorArgs([$this->factory])
+            ->setMethods(['add', 'get', 'cachePath'])
+            ->getMock();
+    }
+
+    private function createRenderer()
+    {
+        $this->renderer = $this->getMockBuilder('Techart\Frontend\Templates\Renderer')
+            ->setConstructorArgs(['', $this->env, $this->loader, null])
+            ->setMethods(['render', 'renderBlock'])
+            ->getMock();
+
+        $this->renderer->expects($this->any())
+            ->method('render')
+            ->will($this->returnValue('string'));
+        $this->renderer->expects($this->any())
+            ->method('renderBlock')
+            ->will($this->returnValue('string'));
+    }
 }

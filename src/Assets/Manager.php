@@ -17,8 +17,6 @@
  */
 namespace Techart\Frontend\Assets;
 
-use Techart\Frontend\ConfigReaderInterface;
-use Techart\Frontend\ConfigReader;
 use Techart\Frontend\EnvironmentInterface;
 
 class Manager
@@ -26,7 +24,6 @@ class Manager
     private $env;
     private $renderer;
     private $reader;
-    private $configReader;
     private $pathResolver;
 
     /**
@@ -50,6 +47,10 @@ class Manager
     {
         $path = trim($path, '/');
         $env = ($this->env->isDev() || $this->env->isHot()) ? EnvironmentInterface::DEV : EnvironmentInterface::PROD;
+        if ($this->env->isHot()) {
+            preg_match('~^((.+)://([^/]+))/(.*)~', $this->reader()->getFirstPath(), $m);
+            return "{$m[1]}{$this->pathResolver->publicPath()}/{$env}/{$path}";
+        }
         return "{$this->pathResolver->publicPath()}/{$env}/{$path}";
     }
 
@@ -73,12 +74,12 @@ class Manager
         return $this->includeFile('js', $name, $attrs);
     }
 
-    public function setReader(RendererInterface $reader)
+    public function setReader(AssetsReaderInterface $reader)
     {
         $this->reader = $reader;
     }
 
-    public function setRenderer(AssetsReaderInterface $renderer)
+    public function setRenderer(RendererInterface $renderer)
     {
         $this->renderer = $renderer;
     }
@@ -109,13 +110,5 @@ class Manager
     private function reader()
     {
         return $this->reader ?: $this->reader = new AssetsReader($this->env, $this->pathResolver->assetsPath());
-    }
-
-    /**
-     * @return ConfigReaderInterface
-     */
-    private function configReader()
-    {
-        return $this->configReader ?: $this->configReader = new ConfigReader($this->pathResolver->settingsPath());
     }
 }

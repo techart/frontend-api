@@ -3,7 +3,7 @@
 namespace Techart\Frontend\Tests\Templates;
 
 use Techart\Frontend\Templates\Repository;
-
+use Techart\Frontend\PathResolver;
 
 class RepositoryTest extends \PHPUnit_Framework_TestCase
 {
@@ -12,12 +12,12 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
 	protected function setUp() {
 		parent::setUp();
 		$env = $this->getMockBuilder('Techart\Frontend\EnvironmentInterface')
-			->setMethods(['getName', 'isProd', 'isDev', 'isHot'])
+			->setMethods(['getName', 'isProd', 'isDev', 'isHot', 'switchTo'])
 			->getMock();
 		$env->method('getName')->willReturn('prod');
 
 		$factory = $this->getMockBuilder('Techart\Frontend\Templates\Factory')
-			->setConstructorArgs([$env, '', ''])
+			->setConstructorArgs([$env, new PathResolver('/some/path/')])
 			->setMethods(['createRenderer'])
 			->getMock();
 

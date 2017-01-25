@@ -27,29 +27,56 @@ class PathResolverTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(realpath($path) . '/' . $options['assetsPath'], $pathResolver->assetsPath());
     }
 
-    public function testDocRootTakenFromServer()
+    /**
+     * @dataProvider docRoots
+     *
+     * @param string $actualRoot
+     * @param string $expectedRoot
+     */
+    public function testDocRootTakenFromServer($actualRoot, $expectedRoot)
     {
-        $_SERVER['DOCUMENT_ROOT'] = $root = '/some/test/root/';
+        $_SERVER['DOCUMENT_ROOT'] = $actualRoot;
         $pathResolver = new PathResolver('/frontend');
         $pathResolver->setConfigReader($this->getEmptyConfigReader()->getMock());
-        $this->assertEquals($root, $pathResolver->docRoot());
+        $this->assertEquals($expectedRoot, $pathResolver->docRoot());
     }
 
-    public function testDocRootTakenFromConfigWhenNoServer()
+    public function docRoots()
+    {
+        return [
+            ['/var/www/root', '/var/www/root'],
+            ['/var/www/root/', '/var/www/root'],
+        ];
+    }
+
+    public function docRootsFromConfig()
+    {
+        return [
+            ['../correct/doc/root', '../correct/doc/root'],
+            ['../correct/doc/root/', '../correct/doc/root'],
+        ];
+    }
+
+    /**
+     * @dataProvider docRoots
+     *
+     * @param string $actualRootPath
+     * @param string $expectedRootPath
+     */
+    public function testDocRootTakenFromConfigWhenNoServer($actualRootPath, $expectedRootPath)
     {
         $_SERVER['DOCUMENT_ROOT'] = '';
         $frontendPath = '/frontend';
-        $root = '../correct/doc/root/';
         $configReader = $this->getEmptyConfigReader()
             ->setMethods(['get'])
             ->getMock();
         $configReader->expects($this->any())
             ->method('get')
             ->with('docRoot')
-            ->willReturn($root);
+            ->willReturn($actualRootPath);
         $pathResolver = new PathResolver($frontendPath);
         $pathResolver->setConfigReader($configReader);
-        $this->assertEquals($frontendPath . '/' . $root, $pathResolver->docRoot());
+        $this->assertEquals($frontendPath . '/' . $expectedRootPath, $pathResolver->docRoot());
     }
 
     public function testPublicPathTakenFromConfig()
