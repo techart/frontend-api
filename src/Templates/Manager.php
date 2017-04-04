@@ -34,9 +34,9 @@ class Manager
 		return $this->getRenderer($mode)->render($name, $this->processParams($params));
 	}
 
-	public function macros($name, $mode = 'default')
+	public function macrosFromBlock($name, $mode = 'default')
 	{
-		return $this->getRenderer($mode)->macrosPath($name);
+		return $this->getRenderer($mode)->blockMacrosPath($name);
 	}
 
 	public function renderBlock($name, $params = array(), $mode = 'default')

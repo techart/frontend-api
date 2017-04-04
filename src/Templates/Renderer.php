@@ -37,7 +37,7 @@ class Renderer implements RendererInterface
 		return $this->twig->render($path, $params);
 	}
 
-	public function macrosPath($name)
+	public function blockMacrosPath($name)
 	{
 		return "@block/$name/" . end(explode('/', $name)) . '.macros.twig';
 	}
