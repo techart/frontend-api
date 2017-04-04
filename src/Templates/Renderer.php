@@ -17,6 +17,7 @@ class Renderer implements RendererInterface
 		$this->env = $env;
 		$this->sourceMap = $sourceMap;
 		$loader->addPath(__DIR__ . '/../../views', 'api');
+		$loader->addPath($src . '/src/block', 'block');
 		$this->twig = new \Twig_Environment($loader, $config);
 		if (isset($config['debug'])) {
 			$this->twig->addExtension(new \Twig_Extension_Debug());
@@ -34,6 +35,11 @@ class Renderer implements RendererInterface
 		$params = $this->defaultParams($path, $params);
 
 		return $this->twig->render($path, $params);
+	}
+
+	public function macrosPath($name)
+	{
+		return "@block/$name/" . end(explode('/', $name)) . '.macros.twig';
 	}
 
 	protected function defaultParams($path, $params)
