@@ -45,6 +45,7 @@ class Renderer implements RendererInterface
 	protected function defaultParams($path, $params)
 	{
 		$params['__DIR__'] = dirname($path);
+		$params['block'] = new Block(!empty($params['__blockName']) ? $params['__blockName'] : $this->blockName($path));
 		return $params;
 	}
 
@@ -105,4 +106,8 @@ class Renderer implements RendererInterface
 		return end(explode('/', $name)).".html.twig";
 	}
 
+	private function blockName($name)
+	{
+		return end(explode('/', str_replace('.html.twig', '', $name)));
+	}
 }
