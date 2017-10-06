@@ -12,6 +12,11 @@ class Renderer implements RendererInterface
 		'js' => array(),
 	);
 
+	/**
+	 * Renderer constructor.
+	 *
+	 * @param array $defaultAttrs
+	 */
 	public function __construct($defaultAttrs = array())
 	{
 		$this->defaultAttrs = array_replace_recursive($this->defaultAttrs, $defaultAttrs);

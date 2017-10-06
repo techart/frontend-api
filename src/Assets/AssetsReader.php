@@ -6,37 +6,46 @@ use Techart\Frontend\EnvironmentInterface;
 
 class AssetsReader implements AssetsReaderInterface
 {
-    private $env;
-    private $assetsDir;
-    private $jsonData = array();
+	private $env;
+	private $assetsDir;
+	private $jsonData = array();
 
-    public function __construct(EnvironmentInterface $env, $assetsDir)
-    {
-        $this->env = $env;
-        $this->assetsDir = $assetsDir;
-    }
+	/**
+	 * AssetsReader constructor.
+	 *
+	 * @param EnvironmentInterface $env
+	 * @param string               $assetsDir
+	 */
+	public function __construct(EnvironmentInterface $env, $assetsDir)
+	{
+		$this->env = $env;
+		$this->assetsDir = $assetsDir;
+	}
 
-    public function get($entryPointName, $type)
-    {
-        $this->readJson();
-        return !empty($this->jsonData[$entryPointName][$type]) ? $this->jsonData[$entryPointName][$type] : null;
-    }
+	public function get($entryPointName, $type)
+	{
+		$this->readJson();
+		return !empty($this->jsonData[$entryPointName][$type]) ? $this->jsonData[$entryPointName][$type] : null;
+	}
 
-    public function getFirstPath()
-    {
-        $this->readJson();
-        return reset(reset($this->jsonData));
-    }
+	public function getFirstPath()
+	{
+		$this->readJson();
+		return reset(reset($this->jsonData));
+	}
 
-    private function readJson()
-    {
-        if (empty($this->jsonData) && $path = $this->getJsonPath()) {
-            $this->jsonData = json_decode(file_get_contents($path), true);
-        }
-    }
+	private function readJson()
+	{
+		if (empty($this->jsonData) && $path = $this->getJsonPath()) {
+			$this->jsonData = json_decode(file_get_contents($path), true);
+		}
+	}
 
-    private function getJsonPath()
-    {
-        return realpath($this->assetsDir . '/' . $this->env->getName() . '.json');
-    }
+	/**
+	 * @return bool|string
+	 */
+	private function getJsonPath()
+	{
+		return realpath($this->assetsDir . '/' . $this->env->getName() . '.json');
+	}
 }

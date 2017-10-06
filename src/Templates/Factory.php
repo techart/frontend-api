@@ -43,10 +43,18 @@ class Factory
 
 		return new $name($this->pathResolver->frontendPath(),
 			$this->env,
-			new Loader($this->pathResolver->frontendPath(),
-				SourceMap::getInstance($this->pathResolver->frontendPath(), $this->cachePath()),
-				$this->env),
-			SourceMap::getInstance($this->pathResolver->frontendPath(), $this->cachePath()),
+			new Loader(
+				$this->pathResolver->frontendPath(),
+				SourceMap::getInstance(
+					$this->pathResolver->frontendPath(),
+					$this->cachePath()
+				),
+				$this->env
+			),
+			SourceMap::getInstance(
+				$this->pathResolver->frontendPath(),
+				$this->cachePath()
+			),
 			array_merge($this->envConfig(), $config));
 
 	}

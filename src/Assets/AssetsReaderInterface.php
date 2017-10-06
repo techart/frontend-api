@@ -2,9 +2,22 @@
 
 namespace Techart\Frontend\Assets;
 
+/**
+ * Интерфейс класса, реализующего чтение файла assets
+ *
+ * @package Techart\Frontend\Assets
+ */
 interface AssetsReaderInterface
 {
-    public function get($entryPointName, $type);
+	/**
+	 * @param string $entryPointName
+	 * @param string $type
+	 * @return mixed
+	 */
+	public function get($entryPointName, $type);
 
-    public function getFirstPath();
+	/**
+	 * @return mixed
+	 */
+	public function getFirstPath();
 }

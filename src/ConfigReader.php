@@ -18,13 +18,13 @@ class ConfigReader implements ConfigReaderInterface
 		return !empty($this->config[$name]) ? $this->config[$name] : $this->config[$name] = $this->load($name);
 	}
 
-    /**
-     * @param $content
-     */
+	/**
+	 * @param $content
+	 */
 	public function setContent($content)
-    {
-        $this->content = $content;
-    }
+	{
+		$this->content = $content;
+	}
 
 	private function load($name)
 	{

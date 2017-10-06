@@ -15,100 +15,149 @@
  * 3. Очистка кэша [+]
  * 9999. Wiki
  */
+
 namespace Techart\Frontend\Assets;
 
 use Techart\Frontend\EnvironmentInterface;
 
 class Manager
 {
-    private $env;
-    private $renderer;
-    private $reader;
-    private $pathResolver;
+	private $env;
+	private $renderer;
+	private $reader;
+	private $pathResolver;
 
-    /**
-     * Assets constructor.
-     *
-     * @todo     move path resolving to another module
-     *
-     * @param EnvironmentInterface           $env
-     * @param \Techart\Frontend\PathResolver $pathResolver
-     *
-     * @internal param string $frontendPath
-     * @internal param $envName
-     */
-    public function __construct(EnvironmentInterface $env, $pathResolver)
-    {
-        $this->env = $env;
-        $this->pathResolver = $pathResolver;
-    }
+	/**
+	 * Assets constructor.
+	 *
+	 * @param EnvironmentInterface           $env
+	 * @param \Techart\Frontend\PathResolver $pathResolver
+	 */
+	public function __construct(EnvironmentInterface $env, $pathResolver)
+	{
+		$this->env = $env;
+		$this->pathResolver = $pathResolver;
+	}
 
-    public function url($path)
-    {
-        $path = trim($path, '/');
-        $env = ($this->env->isDev() || $this->env->isHot()) ? EnvironmentInterface::DEV : EnvironmentInterface::PROD;
-        if ($this->env->isHot()) {
-            preg_match('~^((.+)://([^/]+))/(.*)~', $this->reader()->getFirstPath(), $m);
-            return "{$m[1]}{$this->pathResolver->publicPath()}/{$env}/{$path}";
-        }
-        return "{$this->pathResolver->publicPath()}/{$env}/{$path}";
-    }
+	/**
+	 * Получение адреса до произвольного файла из сборки
+	 *
+	 * @param string $path
+	 * @return string
+	 */
+	public function url($path)
+	{
+		$path = trim($path, '/');
+		$env = ($this->env->isDev() || $this->env->isHot()) ? EnvironmentInterface::DEV : EnvironmentInterface::PROD;
+		if ($this->env->isHot()) {
+			preg_match('~^((.+)://([^/]+))/(.*)~', $this->reader()->getFirstPath(), $m);
+			return "{$m[1]}{$this->pathResolver->publicPath()}/{$env}/{$path}";
+		}
+		return "{$this->pathResolver->publicPath()}/{$env}/{$path}";
+	}
 
-    public function cssUrl($entryPointName)
-    {
-        return $this->reader()->get($entryPointName, 'css') ?: $this->getFallbackUrl($entryPointName, 'css');
-    }
+	/**
+	 * Получение адреса стилей для заданной точки входа
+	 *
+	 * @param string $entryPointName
+	 * @return null|string
+	 */
+	public function cssUrl($entryPointName)
+	{
+		return $this->reader()->get($entryPointName, 'css') ?: $this->getFallbackUrl($entryPointName, 'css');
+	}
 
-    public function jsUrl($entryPointName)
-    {
-        return $this->reader()->get($entryPointName, 'js') ?: $this->getFallbackUrl($entryPointName, 'js');
-    }
+	/**
+	 * Получение адреса скрита для заданной точки входа
+	 *
+	 * @param string $entryPointName
+	 * @return null|string
+	 */
+	public function jsUrl($entryPointName)
+	{
+		return $this->reader()->get($entryPointName, 'js') ?: $this->getFallbackUrl($entryPointName, 'js');
+	}
 
-    public function cssTag($name, $attrs = array())
-    {
-        return $this->includeFile('css', $name, $attrs);
-    }
+	/**
+	 * Получение html тэга для подключения стилей заданной точки входа
+	 *
+	 * @param string $entryPointName
+	 * @param array  $attrs
+	 * @return string
+	 */
+	public function cssTag($entryPointName, $attrs = array())
+	{
+		return $this->includeFile('css', $entryPointName, $attrs);
+	}
 
-    public function jsTag($name, $attrs = array())
-    {
-        return $this->includeFile('js', $name, $attrs);
-    }
+	/**
+	 * Получение html тэга для подключения скрипта заданной точки входа
+	 *
+	 * @param string $entryPointName
+	 * @param array  $attrs
+	 * @return string
+	 */
+	public function jsTag($entryPointName, $attrs = array())
+	{
+		return $this->includeFile('js', $entryPointName, $attrs);
+	}
 
-    public function setReader(AssetsReaderInterface $reader)
-    {
-        $this->reader = $reader;
-    }
+	/**
+	 * Установка собственного класса реализующего интерфейс чтения файла assets
+	 *
+	 * @param AssetsReaderInterface $reader
+	 */
+	public function setReader(AssetsReaderInterface $reader)
+	{
+		$this->reader = $reader;
+	}
 
-    public function setRenderer(RendererInterface $renderer)
-    {
-        $this->renderer = $renderer;
-    }
+	/**
+	 * Установка собственного класса реализующего интерфейс генерации html-тегов
+	 *
+	 * @param RendererInterface $renderer
+	 */
+	public function setRenderer(RendererInterface $renderer)
+	{
+		$this->renderer = $renderer;
+	}
 
-    private function includeFile($type, $name, $attrs = array())
-    {
-        $url = $this->reader()->get($name, $type) ?: $this->getFallbackUrl($name, $type);
-        return $url ? $this->renderer()->tag($type, $url, $attrs) : '';
-    }
+	/**
+	 * @param string $name
+	 * @param string $type
+	 * @return null|string
+	 */
+	public function getFallbackUrl($name, $type)
+	{
+		$url = "{$this->pathResolver->publicPath()}/{$this->env->getName()}/{$type}/{$name}.{$type}";
+		return is_file("{$this->pathResolver->docRoot()}{$url}") ? $url : null;
+	}
 
-    public function getFallbackUrl($name, $type)
-    {
-        $url = "{$this->pathResolver->publicPath()}/{$this->env->getName()}/{$type}/{$name}.{$type}";
-        return is_file("{$this->pathResolver->docRoot()}{$url}") ? $url : null;
-    }
+	/**
+	 * @param string $type
+	 * @param string $entryPointName
+	 * @param array  $attrs
+	 * @return string
+	 */
+	private function includeFile($type, $entryPointName, $attrs = array())
+	{
+		$url = $this->reader()->get($entryPointName, $type) ?: $this->getFallbackUrl($entryPointName, $type);
+		return $url ? $this->renderer()->tag($type, $url, $attrs) : '';
+	}
 
-    /**
-     * @return RendererInterface
-     */
-    private function renderer()
-    {
-        return $this->renderer ?: $this->renderer = new Renderer();
-    }
+	/**
+	 * @return RendererInterface
+	 */
+	private function renderer()
+	{
+		return $this->renderer ?: $this->renderer = new Renderer();
+	}
 
-    /**
-     * @return AssetsReaderInterface
-     */
-    private function reader()
-    {
-        return $this->reader ?: $this->reader = new AssetsReader($this->env, $this->pathResolver->assetsPath());
-    }
+	/**
+	 * @return AssetsReaderInterface
+	 */
+	private function reader()
+	{
+		return $this->reader ?: $this->reader = new AssetsReader($this->env, $this->pathResolver->assetsPath());
+	}
 }

@@ -7,7 +7,6 @@ use Techart\Frontend\Templates\Repository;
 use Techart\Frontend\Templates\Factory;
 use Techart\Frontend\Templates\Manager as TemplatesManager;
 
-
 class Frontend
 {
 	private $assetsManager;

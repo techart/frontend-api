@@ -42,6 +42,4 @@ class Repository
 	{
 		$this->add('default', '\Techart\Frontend\Templates\Renderer', array('autoescape' => false));
 	}
-
-
 }

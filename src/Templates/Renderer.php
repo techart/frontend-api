@@ -3,6 +3,7 @@
 namespace Techart\Frontend\Templates;
 
 use Techart\Frontend\EnvironmentInterface;
+use Techart\Frontend\Templates\Bem\Block;
 
 class Renderer implements RendererInterface
 {
@@ -18,6 +19,7 @@ class Renderer implements RendererInterface
 		$this->sourceMap = $sourceMap;
 		$loader->addPath(__DIR__ . '/../../views', 'api');
 		$loader->addPath($src . '/src/block', 'block');
+		//todo: используется принцип DI, но Twig_Environment подключается прямо в конструуторе :( 
 		$this->twig = new \Twig_Environment($loader, $config);
 		if (isset($config['debug'])) {
 			$this->twig->addExtension(new \Twig_Extension_Debug());
@@ -45,6 +47,7 @@ class Renderer implements RendererInterface
 	protected function defaultParams($path, $params)
 	{
 		$params['__DIR__'] = dirname($path);
+		//TODO: рассмотреть возможность подключения дополнительных хелперов, block сейчас вбит гвоздями
 		$params['block'] = new Block(!empty($params['__blockName']) ? $params['__blockName'] : $this->blockName($path));
 		return $params;
 	}
@@ -67,8 +70,8 @@ class Renderer implements RendererInterface
 
 	protected function exists($path, $name)
 	{
-		if (!file_exists($this->src.$path)) {
-			return $this->src.$path;
+		if (!file_exists($this->src . $path)) {
+			return $this->src . $path;
 		}
 
 		if ($this->env->isProd()) {
@@ -80,7 +83,7 @@ class Renderer implements RendererInterface
 
 	private function npmModulePath($name)
 	{
-		return "/node_modules/".ltrim($name, '@');
+		return "/node_modules/" . ltrim($name, '@');
 	}
 
 	private function templatePath($name)
@@ -103,7 +106,7 @@ class Renderer implements RendererInterface
 
 	private function blockTemplate($name)
 	{
-		return end(explode('/', $name)).".html.twig";
+		return end(explode('/', $name)) . ".html.twig";
 	}
 
 	private function blockName($name)
