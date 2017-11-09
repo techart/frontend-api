@@ -41,7 +41,8 @@ class Renderer implements RendererInterface
 
 	public function blockMacrosPath($name)
 	{
-		return "@block/$name/" . end(explode('/', $name)) . '.macros.twig';
+	    $parts = explode('/', $name);
+		return "@block/$name/" . end($parts) . '.macros.twig';
 	}
 
 	protected function defaultParams($path, $params)
@@ -106,11 +107,13 @@ class Renderer implements RendererInterface
 
 	private function blockTemplate($name)
 	{
-		return end(explode('/', $name)) . ".html.twig";
+	    $parts = explode('/', $name);
+		return end($parts) . ".html.twig";
 	}
 
-	private function blockName($name)
+	protected function blockName($name)
 	{
-		return end(explode('/', str_replace('.html.twig', '', $name)));
+	    $parts = explode('/', str_replace('.html.twig', '', $name));
+		return end($parts);
 	}
 }

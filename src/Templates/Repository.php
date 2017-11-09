@@ -38,7 +38,7 @@ class Repository
 		return $this->factory->cachePath();
 	}
 
-	private function createDefaultRenders()
+	protected function createDefaultRenders()
 	{
 		$this->add('default', '\Techart\Frontend\Templates\Renderer', array('autoescape' => false));
 	}
