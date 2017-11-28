@@ -17,6 +17,8 @@ abstract class BemEntity
 	protected $name;
 	/** @var array список модификаторов */
 	protected $mods = array();
+	/** @var string $deprecatedMod */
+	protected $deprecatedMod;
 
 	/**
 	 * Возвращает имя сущности в виде Bem селектора без модификаторов
@@ -26,7 +28,6 @@ abstract class BemEntity
 
 	/**
 	 * @param $name - имя сущности
-	 * @return $this
 	 */
 	public function setName($name)
 	{
@@ -45,12 +46,23 @@ abstract class BemEntity
 	/**
 	 * @deprecated использовать addMod
 	 * @param string $name
-	 * @param string $value
+	 * @param string $value = null
 	 * @return $this
 	 */
 	public function mod($name, $value = null)
 	{
+		$this->deprecatedMod = $name;
 		return $this->addMod($name, $value);
+	}
+
+	/**
+	 * @deprecated использовать addMod
+	 * @param string $val
+	 * @return $this
+	 */
+	public function val($val)
+	{
+		return $this->addMod($this->deprecatedMod, $val);
 	}
 
 	/**
