@@ -10,6 +10,11 @@ class Manager
 	private $globals;
 	private static $cachePath;
 
+	/**
+	 * Manager constructor.
+	 * @param Repository $repository
+	 * @param array      $globals
+	 */
 	public function __construct($repository, $globals = array())
 	{
 		$this->repository = $repository;
@@ -42,6 +47,11 @@ class Manager
 	public function renderBlock($name, $params = array(), $mode = 'default')
 	{
 		return $this->getRenderer($mode)->renderBlock($name, $this->processParams($params));
+	}
+
+	public function addHelper($helper, $name = 'app', $mode = 'default')
+	{
+		return $this->getRenderer($mode)->addHelper($helper, $name);
 	}
 
 	public function addRenderer($mode, $name, $params = array())

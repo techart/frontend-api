@@ -11,6 +11,7 @@ class Renderer implements RendererInterface
 	protected $twig = null;
 	protected $sourceMap = null;
 	protected $env = null;
+	protected $helpers = array();
 
 	public function __construct($src, EnvironmentInterface $env, $loader, $sourceMap, $config = array())
 	{
@@ -19,7 +20,7 @@ class Renderer implements RendererInterface
 		$this->sourceMap = $sourceMap;
 		$loader->addPath(__DIR__ . '/../../views', 'api');
 		$loader->addPath($src . '/src/block', 'block');
-		//todo: используется принцип DI, но Twig_Environment подключается прямо в конструуторе :( 
+		//todo: используется принцип DI, но Twig_Environment подключается прямо в конструуторе :(
 		$this->twig = new \Twig_Environment($loader, $config);
 		if (isset($config['debug'])) {
 			$this->twig->addExtension(new \Twig_Extension_Debug());
@@ -41,15 +42,20 @@ class Renderer implements RendererInterface
 
 	public function blockMacrosPath($name)
 	{
-	    $parts = explode('/', $name);
+		$parts = explode('/', $name);
 		return "@block/$name/" . end($parts) . '.macros.twig';
 	}
 
 	protected function defaultParams($path, $params)
 	{
 		$params['__DIR__'] = dirname($path);
-		//TODO: рассмотреть возможность подключения дополнительных хелперов, block сейчас вбит гвоздями
+		//TODO: block сейчас вбит гвоздями, рассмотреть возможность подключения через addHelper
 		$params['block'] = new Block(!empty($params['__blockName']) ? $params['__blockName'] : $this->blockName($path));
+		foreach ($this->helpers as $name => $obj) {
+			if(!isset($params[$name])) {
+				$params[$name] = $obj;
+			}
+		}
 		return $params;
 	}
 
@@ -107,13 +113,24 @@ class Renderer implements RendererInterface
 
 	private function blockTemplate($name)
 	{
-	    $parts = explode('/', $name);
+		$parts = explode('/', $name);
 		return end($parts) . ".html.twig";
 	}
 
 	protected function blockName($name)
 	{
-	    $parts = explode('/', str_replace('.html.twig', '', $name));
+		$parts = explode('/', str_replace('.html.twig', '', $name));
 		return end($parts);
+	}
+
+	/**
+	 * Добавляет объект-хелпер с php-методами, помогающими рендерить контент
+	 *
+	 * @param object $helper
+	 * @param string $name = 'app'
+	 */
+	public function addHelper($helper, $name = 'app')
+	{
+		$this->helpers[$name] = $helper;
 	}
 }

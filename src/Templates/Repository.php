@@ -4,6 +4,9 @@ namespace Techart\Frontend\Templates;
 
 class Repository
 {
+	/**
+	 * @var RendererInterface[]
+	 */
 	private $renders = array();
 	private $factory;
 
