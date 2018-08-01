@@ -2,8 +2,6 @@
 
 namespace Techart\Frontend\Templates;
 
-use Techart\Frontend\Closure;
-
 class Manager
 {
 	private $repository;
@@ -33,7 +31,7 @@ class Manager
 			$this->getRenderer($mode)->addGlobal($name, $value);
 		}
 	}
-	
+
 	public function exists($name, $mode = 'default')
 	{
 		return $this->getRenderer($mode)->exists($name);
@@ -41,7 +39,7 @@ class Manager
 
 	public function render($name, $params = array(), $mode = 'default')
 	{
-		return $this->getRenderer($mode)->render($name, $this->processParams($params));
+		return $this->getRenderer($mode)->render($name, $params);
 	}
 
 	public function macrosFromBlock($name, $mode = 'default')
@@ -51,7 +49,7 @@ class Manager
 
 	public function renderBlock($name, $params = array(), $mode = 'default')
 	{
-		return $this->getRenderer($mode)->renderBlock($name, $this->processParams($params));
+		return $this->getRenderer($mode)->renderBlock($name, $params);
 	}
 
 	public function addHelper($helper, $name = 'app', $mode = 'default')
@@ -90,23 +88,5 @@ class Manager
 	private function getRenderer($mode)
 	{
 		return $this->repository->get($mode);
-	}
-
-	private function processParams($params)
-	{
-		return $this->checkClosures($params);
-	}
-
-	private function checkClosures($params)
-	{
-		if (!empty($params)) {
-			foreach ($params as $name => $param) {
-				if (is_callable($param)) {
-					$params[$name] = new Closure($param);
-				}
-			}
-		}
-
-		return $params;
 	}
 }
