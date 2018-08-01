@@ -72,10 +72,10 @@ class Renderer implements RendererInterface
 
 		$path = $this->templatePath($name);
 
-		return $this->exists($path, $name);
+		return $this->addToSourceMap($path, $name);
 	}
 
-	protected function exists($path, $name)
+	protected function addToSourceMap($path, $name)
 	{
 		if (!file_exists($this->src . $path)) {
 			return $this->src . $path;
@@ -86,6 +86,12 @@ class Renderer implements RendererInterface
 		}
 
 		return $path;
+	}
+	
+	public function exists($name)
+	{
+		$path = $this->templatePath($name);
+		return file_exists($this->src . $path);
 	}
 
 	private function npmModulePath($name)

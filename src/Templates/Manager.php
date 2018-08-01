@@ -33,6 +33,11 @@ class Manager
 			$this->getRenderer($mode)->addGlobal($name, $value);
 		}
 	}
+	
+	public function exists($name, $mode = 'default')
+	{
+		return $this->getRenderer($mode)->exists($name);
+	}
 
 	public function render($name, $params = array(), $mode = 'default')
 	{
