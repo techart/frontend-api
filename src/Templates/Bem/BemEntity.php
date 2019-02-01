@@ -44,19 +44,50 @@ abstract class BemEntity
 	}
 
 	/**
-	 * @deprecated использовать addMod
-	 * @param string $name
-	 * @param string $value = null
+	 * @param string $name - имя модификатора
+	 * @param mixed $value = true - значение модификатора (опционально)
 	 * @return $this
 	 */
-	public function mod($name, $value = null)
+	public function mod($name, $value = true)
 	{
-		$this->deprecatedMod = $name;
-		return $this->addMod($name, $value);
+		if (empty($name)) {
+			return $this;
+		}
+
+		if (preg_match('/[\s]+/', $name)) {
+			$name = preg_split('/[\s,]+/', $name);
+		}
+
+		if (is_array($name)) {
+			if ($this->is_assoc($name)) {
+				foreach ($name as $modName => $modValue) {
+					$this->mod($modName, $modValue);
+				}
+			} else {
+				foreach ($name as $modName) {
+					$this->mod($modName);
+				}
+			}
+		} else if (strpos($name, self::VALUE_DIVIDER) !== false) {
+			$exploded = explode(self::VALUE_DIVIDER, $name);
+			$this->mod($exploded[0], $exploded[1]);
+		} else {
+			$this->mods[$name] = $value;
+		}
+
+		return $this;
+	}
+
+	protected function is_assoc($arr) {
+		if (!is_array($arr) || array() === $arr) {
+			return false;
+		}
+
+		return array_keys($arr) !== range(0, count($arr) - 1);
 	}
 
 	/**
-	 * @deprecated использовать addMod
+	 * @deprecated использовать mod
 	 * @param string $val
 	 * @return $this
 	 */
@@ -66,25 +97,14 @@ abstract class BemEntity
 	}
 
 	/**
+	 * @alias mod
 	 * @param string $name - имя модификатора
-	 * @param string|null $value - значение модификатора (опционально)
+	 * @param mixed $value = true - значение модификатора (опционально)
 	 * @return $this
 	 */
-	public function addMod($name, $value = null)
+	public function addMod($name, $value = true)
 	{
-		if (empty($name)) {
-			return $this;
-		}
-
-		if (empty($value) && strpos($name, self::VALUE_DIVIDER) !== false) {
-			$exploded = explode(self::VALUE_DIVIDER, $name);
-			$this->mods[$exploded[0]] = $exploded[1];
-		} else {
-			$this->mods[$name] = $value;
-		}
-
-
-		return $this;
+		return $this->mod($name, $value);
 	}
 
 	/**
@@ -116,11 +136,18 @@ abstract class BemEntity
 	{
 		$bemSelector = $this->getBemName();
 		foreach ($this->mods as $modName => $modValue) {
-			$mod = $modName;
-			if (!empty($modValue)) {
+			$mod = null;
+			if ($modValue === false) {
+				$mod = '';
+			} else if ($modValue === true || $modValue === '' || is_null($modValue)) {
+				$mod = $modName;
+			} else {
 				$mod = $modName . self::VALUE_DIVIDER . $modValue;
 			}
-			$bemSelector .= " {$this->getBemName()}" . self::MOD_DIVIDER . $mod;
+
+			if ($mod !== '') {
+				$bemSelector .= " {$this->getBemName()}" . self::MOD_DIVIDER . $mod;
+			}
 		}
 
 		return $bemSelector;
