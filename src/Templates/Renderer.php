@@ -119,6 +119,9 @@ class Renderer implements RendererInterface
 	public function exists($name)
 	{
 		$path = $this->templatePath($name);
+		if (strpos($path, 'blade:') === 0) {
+			return true;
+		}
 		return file_exists($this->src . $path);
 	}
 
