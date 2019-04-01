@@ -12,6 +12,7 @@ class Renderer implements RendererInterface
 	protected $sourceMap = null;
 	protected $env = null;
 	protected $helpers = array();
+	protected $blade = null;
 
 	public function __construct($src, EnvironmentInterface $env, $loader, $sourceMap, $config = array())
 	{
@@ -26,6 +27,14 @@ class Renderer implements RendererInterface
 			$this->twig->addExtension(new \Twig_Extension_Debug());
 		}
 	}
+	
+	public function blade()
+	{
+		if (!$this->blade) {
+			$this->blade = new Blade(rtrim($this->src, '/').'/src', './local/cache/blade');
+		}
+		return $this->blade;
+	}
 
 	public function addGlobal($name, $value)
 	{
@@ -36,6 +45,12 @@ class Renderer implements RendererInterface
 	{
 		$path = $this->find($name);
 		$params = $this->defaultParams($path, $params);
+		
+		if (preg_match('{^blade:(.+)$}', $path, $m)) {
+			$path = $m[1];
+			return $this->blade()->render($path, $params);
+		}
+		
 
 		return $this->twig->render($path, $params);
 	}
@@ -48,7 +63,7 @@ class Renderer implements RendererInterface
 
 	protected function defaultParams($path, $params)
 	{
-		$params['__DIR__'] = dirname($path);
+		$params['__DIR__'] = $this->dirnameFor($path);
 		//TODO: block сейчас вбит гвоздями, рассмотреть возможность подключения через addHelper
 		$params['block'] = new Block(!empty($params['__blockName']) ? $params['__blockName'] : $this->blockName($path));
 		foreach ($this->helpers as $name => $obj) {
@@ -57,6 +72,15 @@ class Renderer implements RendererInterface
 			}
 		}
 		return $params;
+	}
+	
+	protected function dirnameFor($path)
+	{
+		if (preg_match('{^blade:(.+)$}', $path, $m)) {
+			$path = $m[1];
+			$path = rtrim($this->src, '/'). '/' . str_replace('.', '/', $path) . '/.php';
+		}
+		return dirname($path);
 	}
 
 	public function renderBlock($name, $params = array())
@@ -77,6 +101,10 @@ class Renderer implements RendererInterface
 
 	protected function addToSourceMap($path, $name)
 	{
+		if (substr($path, 0, 6) === 'blade:') {
+			return $path;
+		}
+		
 		if (!file_exists($this->src . $path)) {
 			return $this->src . $path;
 		}
@@ -104,7 +132,15 @@ class Renderer implements RendererInterface
 		if (strpos($name, '@') === 0) {
 			return $this->npmModulePath($name);
 		}
-
+		
+		if (preg_match('{/([^/]+)$}', $name, $m)) {
+			$path = rtrim($this->src, '/');
+			$path = "{$path}/src/block/{$name}/{$m[1]}.blade.php";
+			if (is_file($path)) {
+				return 'blade:block.'.str_replace('/', '.', $name).'.'.$m[1];
+			}
+		}
+		
 		if (strpos($name, '.twig') === false) {
 			return "/src/{$this->blockPath($name)}";
 		}
@@ -125,6 +161,9 @@ class Renderer implements RendererInterface
 
 	protected function blockName($name)
 	{
+		if (preg_match('{^blade:(.+)\.([^.]+)$}', $name, $m)) {
+			return $m[2];
+		}
 		$parts = explode('/', str_replace('.html.twig', '', $name));
 		return end($parts);
 	}
