@@ -31,7 +31,10 @@ class Renderer implements RendererInterface
 	public function blade()
 	{
 		if (!$this->blade) {
-			$this->blade = new Blade(rtrim($this->src, '/').'/src', './local/cache/blade');
+			$this->blade = new Blade(
+				rtrim($this->src, '/').'/src',
+				rtrim($_SERVER['DOCUMENT_ROOT'], '/') . '/local/cache/blade'
+			);
 		}
 		return $this->blade;
 	}
