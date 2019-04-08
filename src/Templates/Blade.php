@@ -12,6 +12,7 @@ use Illuminate\View\Engines\CompilerEngine;
 use Illuminate\View\Engines\EngineResolver;
 use Illuminate\View\Factory;
 use Illuminate\View\FileViewFinder;
+use Illuminate\View\View;
 
 class Blade
 {
@@ -112,5 +113,10 @@ class Blade
 	public function exists($view)
 	{
 		return $this->getFactory()->exists($view);
+	}
+
+	public function addGlobal($name, $value)
+	{
+		$this->getFactory()->share($name, $value);
 	}
 }

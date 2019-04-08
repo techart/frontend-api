@@ -42,6 +42,7 @@ class Renderer implements RendererInterface
 	public function addGlobal($name, $value)
 	{
 		$this->twig->addGlobal($name, $value);
+		$this->blade()->addGlobal($name, $value);
 	}
 
 	public function render($name, $params = array())
