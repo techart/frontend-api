@@ -34,6 +34,8 @@ class ConfigReader implements ConfigReaderInterface
 				return preg_match('~buildPath: [\'\"](.+)[\'\"],~m', $content, $m) ? $m[1] : '';
 			case 'docRoot':
 				return preg_match('~docRoot: [\'\"](.+)[\'\"],~m', $content, $m) ? $m[1] : '';
+			case 'base64MaxFileSize':
+				return preg_match('~base64MaxFileSize: (\d+),~m', $content, $m) ? intval($m[1]) : 0;
 			default:
 				return null;
 		}

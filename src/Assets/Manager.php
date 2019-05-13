@@ -47,13 +47,28 @@ class Manager
 	 */
 	public function url($path)
 	{
+		$maxImgSize = $this->pathResolver->configReader()->get('base64MaxFileSize');
 		$path = trim($path, '/');
 		$env = ($this->env->isDev() || $this->env->isHot()) ? EnvironmentInterface::DEV : EnvironmentInterface::PROD;
-		if ($this->env->isHot()) {
-			preg_match('~^((.+)://([^/]+))/(.*)~', $this->reader()->getFirstPath(), $m);
-			return "{$m[1]}{$this->pathResolver->publicPath()}/{$env}/{$path}";
+
+		if (filesize( $this->pathResolver->frontendPath() . $path) >= $maxImgSize) {
+			if ($this->env->isHot()) {
+				preg_match('~^((.+)://([^/]+))/(.*)~', $this->reader()->getFirstPath(), $m);
+				return "{$m[1]}{$this->pathResolver->publicPath()}/{$env}/{$path}";
+			}
+			return "{$this->pathResolver->publicPath()}/{$env}/{$path}";
+		} else {
+			return $this->getBase64($this->pathResolver->frontendPath() . $path);
 		}
-		return "{$this->pathResolver->publicPath()}/{$env}/{$path}";
+	}
+
+	protected function getBase64($path) {
+		$type = pathinfo($path, PATHINFO_EXTENSION);
+		if ($type === 'svg') {
+			$type .= '+xml';
+		}
+		$data = file_get_contents($path);
+		return 'data:image/' . $type . ';base64,' . base64_encode($data);
 	}
 
 	/**

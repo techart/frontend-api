@@ -31,7 +31,8 @@ class AssetsReader implements AssetsReaderInterface
 	public function getFirstPath()
 	{
 		$this->readJson();
-		return reset(reset($this->jsonData));
+		$firstElement = reset($this->jsonData);
+		return reset($firstElement);
 	}
 
 	private function readJson()

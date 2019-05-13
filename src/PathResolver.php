@@ -85,7 +85,7 @@ class PathResolver
 		return $this;
 	}
 
-	private function configReader()
+	public function configReader()
 	{
 		if(!$this->configReader) {
 			$this->configReader = new ConfigReader($this->settingsPath());
