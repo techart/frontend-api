@@ -3,8 +3,9 @@
 namespace Techart\Frontend\Templates;
 
 use Techart\Frontend\EnvironmentInterface;
+use Twig\Error\LoaderError;
 
-class Loader extends \Twig_Loader_Filesystem
+class Loader extends \Twig\Loader\FilesystemLoader
 {
 	protected $sourceMap = null;
 	protected $env = '';
@@ -16,13 +17,13 @@ class Loader extends \Twig_Loader_Filesystem
 		parent::__construct($paths);
 	}
 
-	public function addPath($path, $namespace = self::MAIN_NAMESPACE)
+	public function addPath(string $path, string $namespace = self::MAIN_NAMESPACE):void
 	{
 		// invalidate the cache
 		$this->cache = $this->errorCache = array();
 
 		if ($this->env->isProd() && !is_dir($path)) {
-			throw new \Twig_Error_Loader(sprintf('The "%s" directory does not exist.', $path));
+			throw new LoaderError(sprintf('The "%s" directory does not exist.', $path));
 		}
 
 		$this->paths[$namespace][] = rtrim($path, '/\\');
@@ -32,17 +33,17 @@ class Loader extends \Twig_Loader_Filesystem
 	 * @param string $name
 	 * @param int    $time
 	 * @return bool
-	 * @throws \Twig_Error_Loader
+	 * @throws LoaderError
 	 *
 	 * @ тут нужна. мы считаем что если исходника вдруг нет, то кеш актуален.
 	 *
 	 */
-	public function isFresh($name, $time)
+	public function isFresh(string $name, int $time):bool
 	{
 		return (int)@filemtime($this->findTemplate($name)) <= $time;
 	}
 
-	protected function findTemplate($name)
+	protected function findTemplate(string $name, bool $throw = true)
 	{
 		$throw = func_num_args() > 1 ? func_get_arg(1) : true;
 		$name = $this->normalizeName($name);
@@ -56,7 +57,7 @@ class Loader extends \Twig_Loader_Filesystem
 				return false;
 			}
 
-			throw new \Twig_Error_Loader($this->errorCache[$name]);
+			throw new LoaderError($this->errorCache[$name]);
 		}
 
 		$this->validateName($name);
@@ -70,7 +71,7 @@ class Loader extends \Twig_Loader_Filesystem
 				return false;
 			}
 
-			throw new \Twig_Error_Loader($this->errorCache[$name]);
+			throw new LoaderError($this->errorCache[$name]);
 		}
 
 
@@ -92,6 +93,6 @@ class Loader extends \Twig_Loader_Filesystem
 		if (!$throw) {
 			return false;
 		}
-		throw new \Twig_Error_Loader($this->errorCache[$name]);
+		throw new LoaderError($this->errorCache[$name]);
 	}
 }

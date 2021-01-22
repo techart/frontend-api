@@ -2,9 +2,9 @@
 
 namespace Techart\Frontend\Templates;
 
-class Cache extends \Twig_Cache_Filesystem
+class Cache extends \Twig\Cache\FilesystemCache
 {
-	public function write($key, $content)
+	public function write(string $key, string $content):void
 	{
 		$old = umask(2);
 		try {

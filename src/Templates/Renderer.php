@@ -22,9 +22,9 @@ class Renderer implements RendererInterface
 		$loader->addPath(__DIR__ . '/../../views', 'api');
 		$loader->addPath($src . '/src/block', 'block');
 		//todo: используется принцип DI, но Twig_Environment подключается прямо в конструуторе :(
-		$this->twig = new \Twig_Environment($loader, $config);
+		$this->twig = new \Twig\Environment($loader, $config);
 		if (isset($config['debug'])) {
-			$this->twig->addExtension(new \Twig_Extension_Debug());
+			$this->twig->addExtension(new \Twig\Extension\DebugExtension());
 		}
 	}
 	
