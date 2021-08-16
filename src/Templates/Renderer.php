@@ -13,12 +13,14 @@ class Renderer implements RendererInterface
 	protected $env = null;
 	protected $helpers = array();
 	protected $blade = null;
+	protected $config = array();
 
 	public function __construct($src, EnvironmentInterface $env, $loader, $sourceMap, $config = array())
 	{
 		$this->src = $src;
 		$this->env = $env;
 		$this->sourceMap = $sourceMap;
+		$this->config = $config;
 		$loader->addPath(__DIR__ . '/../../views', 'api');
 		$loader->addPath($src . '/src/block', 'block');
 		//todo: используется принцип DI, но Twig_Environment подключается прямо в конструуторе :(
@@ -33,7 +35,7 @@ class Renderer implements RendererInterface
 		if (!$this->blade) {
 			$this->blade = new Blade(
 				rtrim($this->src, '/').'/src',
-				rtrim($_SERVER['DOCUMENT_ROOT'], '/') . '/local/cache/blade'
+				$this->config['bladeCachePath'] ?? rtrim($_SERVER['DOCUMENT_ROOT'], '/') . '/local/cache/blade',
 			);
 		}
 		return $this->blade;

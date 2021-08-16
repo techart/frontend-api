@@ -15,11 +15,13 @@ class PathResolver
 		'assetsPath' => 'assets',
 		'settingsPath' => 'user.settings.js',
 		'twigCachePath' => 'some/',
+		'bladeCachePath' => 'some/',
 		'docRoot' => '',
 	);
 
 	public function __construct($frontendPath, $options = array())
 	{
+		$this->defaultOptions['bladeCachePath'] = defined('BLADE_CACHE_PATH')? BLADE_CACHE_PATH : rtrim($_SERVER['DOCUMENT_ROOT'], '/') . '/local/cache/blade';
 		$this->frontendPath = rtrim(realpath($frontendPath), '/') . '/';
 		$this->options = array_replace_recursive($this->defaultOptions, $options);
 	}
@@ -72,6 +74,11 @@ class PathResolver
 	public function twigCachePath()
 	{
 		return $this->getOption('twigCachePath');
+	}
+
+	public function bladeCachePath()
+	{
+		return $this->getOption('bladeCachePath');
 	}
 
 	private function getOption($name)

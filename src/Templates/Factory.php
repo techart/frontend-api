@@ -28,6 +28,7 @@ class Factory
 		$this->env = $env;
 		$this->pathResolver = $pathResolver;
 		$this->config['prod']['cache'] = new Cache($this->cachePath());
+		$this->config[$env->getName()]['bladeCachePath'] = $this->pathResolver->bladeCachePath();
 	}
 
 	public function cachePath()
@@ -55,8 +56,8 @@ class Factory
 				$this->pathResolver->frontendPath(),
 				$this->cachePath()
 			),
-			array_merge($this->envConfig(), $config));
-
+			array_merge($this->envConfig(), $config)
+		);
 	}
 
 	private function envConfig()
