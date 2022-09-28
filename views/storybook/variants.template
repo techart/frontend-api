@@ -1,0 +1,16 @@
+const Template@variant_name@ = (args) => {
+	const
+		replaces = {@replaces@}
+	;
+
+	let
+		html = html@variant_name@
+	;
+
+	Object.keys(replaces).forEach((key) => {
+		html = html.replaceAll(key, replaces[key]);
+	});
+
+	return html;
+};
+

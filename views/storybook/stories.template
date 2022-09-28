@@ -1,0 +1,15 @@
+import mdx_docs from "./@docs_name@.mdx";
+
+
+export default {
+	title: "@story_section@/@story_title@",
+	parameters: {
+		docs: {
+			page: mdx_docs
+		}@parameters@
+	}
+};
+
+@templates@
+
+@controls@

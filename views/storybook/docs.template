@@ -1,0 +1,14 @@
+# @block_name@ (@block@)
+
+
+## Пример использования
+@php@
+
+## HTML шаблон блока (Blade)
+@blade@
+
+## Сценарии блока (Javascript)
+@js@
+
+## Стили блока (SCSS)
+@scss@
