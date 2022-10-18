@@ -1,7 +1,7 @@
 {
     "name": "techart/frontend-api",
     "description": "API для доступа к файлам сборки фронтенда",
-    "version": "4.3.0",
+    "version": "5.0.0",
     "authors": [
         {
             "name": "Techart",
@@ -16,6 +16,6 @@
     "minimum-stability": "dev",
     "require": {
         "twig/twig": "^3.0",
-        "illuminate/view": "^8.0"
+        "illuminate/view": "^9.0"
     }
 }
