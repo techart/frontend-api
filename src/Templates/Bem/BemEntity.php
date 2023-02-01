@@ -54,8 +54,10 @@ abstract class BemEntity
 			return $this;
 		}
 
-		if (preg_match('/[\s]+/', $name)) {
-			$name = preg_split('/[\s,]+/', $name);
+		if (!is_array($name)) {
+			if (preg_match('/[\s]+/', $name)) {
+				$name = preg_split('/[\s,]+/', $name);
+			}
 		}
 
 		if (is_array($name)) {
