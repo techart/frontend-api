@@ -95,4 +95,48 @@ class Loader extends \Twig\Loader\FilesystemLoader
 		}
 		throw new LoaderError($this->errorCache[$name]);
 	}
+
+	private function normalizeName(string $name): string
+	{
+		return preg_replace('#/{2,}#', '/', str_replace('\\', '/', $name));
+	}
+
+	private function parseName(string $name, string $default = self::MAIN_NAMESPACE): array
+	{
+		if (isset($name[0]) && '@' == $name[0]) {
+			if (false === $pos = strpos($name, '/')) {
+				throw new LoaderError(sprintf('Malformed namespaced template name "%s" (expecting "@namespace/template_name").', $name));
+			}
+
+			$namespace = substr($name, 1, $pos - 1);
+			$shortname = substr($name, $pos + 1);
+
+			return [$namespace, $shortname];
+		}
+
+		return [$default, $name];
+	}
+
+	private function validateName(string $name): void
+	{
+		if (false !== strpos($name, "\0")) {
+			throw new LoaderError('A template name cannot contain NUL bytes.');
+		}
+
+		$name = ltrim($name, '/');
+		$parts = explode('/', $name);
+		$level = 0;
+		foreach ($parts as $part) {
+			if ('..' === $part) {
+				--$level;
+			} elseif ('.' !== $part) {
+				++$level;
+			}
+
+			if ($level < 0) {
+				throw new LoaderError(sprintf('Looks like you try to load a template outside configured directories (%s).', $name));
+			}
+		}
+	}
+
 }
