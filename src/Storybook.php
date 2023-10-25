@@ -398,17 +398,19 @@ class Storybook {
 		foreach ($variantsList as $variantName) {
 			$variant_template = $base_variant_template;
 			$controls_template = $base_controls_template;
-
 			$replaces = [];
-			foreach ($this->params['args'][$variantName] as $_name => $_arg_value) {
-				if (!isset($this->params['htmls'][$variantName]['vars'][$_name])) {
-					continue;
+
+			if (isset($this->params['args'][$variantName])) {
+				foreach ($this->params['args'][$variantName] as $_name => $_arg_value) {
+					if (!isset($this->params['htmls'][$variantName]['vars'][$_name])) {
+						continue;
+					}
+					$_value = $this->params['htmls'][$variantName]['vars'][$_name];
+					if (!is_string($_value)) {
+						continue;
+					}
+					$replaces[] = '\'' . $_value . '\': (() => { return args.' . $_name . '; })()';
 				}
-				$_value = $this->params['htmls'][$variantName]['vars'][$_name];
-				if (!is_string($_value)) {
-					continue;
-				}
-				$replaces[] = '\'' . $_value . '\': (() => { return args.' . $_name . '; })()';
 			}
 
 			$variant_template = str_replace("@variant_name@", $variantName, $variant_template);
