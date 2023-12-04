@@ -142,6 +142,7 @@ class Storybook {
 			}
 			if ($canOverwrite) {
 				if (($htmlContent = $this->buildHtml($variantName, $variantData)) &&
+					($htmlContent = $this->makeReplaces($variantName, $htmlContent)) &&
 					@file_put_contents($htmlFile, $htmlContent)) {
 					echo static::PREFIX, static::ESC_GREEN_START, "{$resultVerb} html-шаблон {$variantName} блока {$this->blockName}", static::ESC_FINISH, PHP_EOL;
 				} else {
@@ -398,6 +399,7 @@ class Storybook {
 		foreach ($variantsList as $variantName) {
 			$variant_template = $base_variant_template;
 			$controls_template = $base_controls_template;
+
 			$replaces = [];
 
 			if (isset($this->params['args'][$variantName])) {
@@ -409,7 +411,28 @@ class Storybook {
 					if (!is_string($_value)) {
 						continue;
 					}
-					$replaces[] = '\'' . $_value . '\': (() => { return args.' . $_name . '; })()';
+					if (isset($this->params['htmls'][$variantName]['replaces']) &&
+						($_replaces = $this->params['htmls'][$variantName]['replaces']) &&
+						isset($_replaces[$_name])) {
+
+						$_arg = 'args.' . $_name;
+
+						$_empty = var_export($_replaces[$_name]['empty'] ?? '', true);
+						$_default = var_export($_replaces[$_name]['default'] ?? '', true);
+
+						$_escape_quotes = (false !== mb_strpos($_replaces[$_name]['code'], '"'));
+
+						$_src = ["\n",		"'",		$_replaces[$_name]['mark']];
+						$_dst = ['\n',		'\\\'',		'\' + ' . $_arg . ($_escape_quotes ? '.replaceAll(\'"\', \'&quot;\')' : '') . ' + \''];
+
+						$replaces[] = '\'' . $_value . '\': (() => { return (' . $_empty . ' !== ' . $_arg . ') ? \'' . str_replace(
+							$_src,
+							$_dst,
+							$_replaces[$_name]['code']
+						) . '\' : ' . $_default . '; })()';
+					} else {
+						$replaces[] = '\'' . $_value . '\': (() => { return args.' . $_name . '; })()';
+					}
 				}
 			}
 
@@ -444,6 +467,25 @@ class Storybook {
 		$story_template = str_replace("@controls@", $controls_all, $story_template);
 
 		return $story_template;
+	}
+
+
+	private function makeReplaces($variantName, $html)
+	{
+		if (isset($this->params['htmls'][$variantName]) &&
+			($params = $this->params['htmls'][$variantName]) &&
+			isset($params['replaces']) &&
+			(0 < count($params['replaces']))) {
+
+			foreach ($params['replaces'] as $var => $replace) {
+				if (false === mb_strpos($html, $replace['code'])) {
+					continue;
+				}
+				$html = str_replace($replace['code'], $replace['mark'], $html);
+			}
+
+		}
+		return $html;
 	}
 
 
