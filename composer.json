@@ -1,7 +1,7 @@
 {
     "name": "techart/frontend-api",
     "description": "API для доступа к файлам сборки фронтенда",
-    "version": "5.1.0",
+    "version": "5.2.0",
     "authors": [
         {
             "name": "Techart",

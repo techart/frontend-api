@@ -13,6 +13,7 @@ class Storybook {
 
 	const FS_DIRS = ['.', '..'];
 
+	private $rootPath;
 	private $blockName;
 	private $srcPath;
 	private $blockLocal;
@@ -24,12 +25,60 @@ class Storybook {
 
 
 	/**
-	 * Возвращает массив путей к файлам storybook.json из переданной директории
+	 * Возвращает массив параметров командной строки генератора
 	 *
-	 * @param  string $dir путь директории, в которой искать
 	 * @return array
 	 */
-	static public function scanStorybookJson($dir, $only_blocks = []) {
+	public static function getParams()
+	{
+		return [
+			'help' => [
+				'info' => 'выводит справку по параметрам',
+			],
+
+			'overwrite' => [
+				'info' => 'указывает генератору, следует ли перезаписывать уже существующие файлы историй; возможные значения - yes или no',
+				'variants' => ['yes', 'no'],
+				'default' => 'no',
+				'value' => '',
+			],
+
+			'only' => [
+				'info' => 'указывает генератору, для каких блоков следует перегенерировать истории; принимает имена блоков как для вызова renderBlock(), несколько блоков можно указать через запятую',
+				'value' => '',
+			],
+		];
+	}
+
+
+	/**
+	 * Выводит в консоль справку по использованию генератора с параметрами
+	 *
+	 * @return void
+	 */
+	public static function showHelp()
+	{
+		echo 'Справка по параметрам запуска сценария:', PHP_EOL, PHP_EOL;
+
+		foreach (static::getParams() as $name => $data) {
+			$delim = str_repeat(' ', 12 - strlen($name));
+			echo '  --', $name, $delim, $data['info'];
+			if (isset($data['default'])) {
+				echo ', значение по умолчанию - ', $data['default'];
+			}
+			echo PHP_EOL, PHP_EOL;
+		}
+	}
+
+
+	/**
+	 * Возвращает массив путей к файлам *.storybook.json из указанного каталога
+	 *
+	 * @param  string $dir путь к каталогу, в котором надо искать файлы
+	 * @return array
+	 */
+	public static function scanStorybookJson($dir, $only_blocks = [])
+	{
 		$needs_check = (0 < count($only_blocks));
 
 		$files = [];
@@ -71,14 +120,178 @@ class Storybook {
 
 
 	/**
-	 * __construct
+	 * Конструктор
+	 *
+	 * @param string $rootPath путь к корню сайта (каталог www)
+	 * @return void
+	 */
+	public function __construct($rootPath)
+	{
+		$this->rootPath = $rootPath;
+	}
+
+
+	/**
+	 * Выполняет основную логику работы:
+	 * - собирает список файлов с описаниями историй блоков
+	 * - для каждого найденного файла:
+	 * -- формирует на основе описания настройки и параметры
+	 * -- устанавливает их во внутренние переменные
+	 * -- запускает генератор
+	 *
+	 * @param array $options настройки работы из аргументов командной строки
+	 * @return void
+	 */
+	public function Run($options = [])
+	{
+		$all_overwrite = $options['all_overwrite'] ?? null;
+		$only_blocks = $options['only_blocks'] ?? [];
+
+		if ($all_overwrite) {
+			echo PHP_EOL, static::ESC_RED_START, "ВНИМАНИЕ!!! Включен режим автоматической перезаписи всех файлов для историй блоков!", static::ESC_FINISH, PHP_EOL, PHP_EOL;
+		}
+
+		// Читаем .workspace_config
+		$config = file_get_contents($this->rootPath . "/.workspace_config");
+
+		// Достаём путь до папки src
+		$matches = [];
+		preg_match("/^(path_to_frontend|path_to_mordor)(.*)$/im", $config, $matches);
+		$srcPath = "{$this->rootPath}/" . trim($matches[2]) . "/src";
+
+		// Узнаём название проекта
+		$matches = [];
+		preg_match("/^project\s+(.*)$/im", $config, $matches);
+		$projectName = trim($matches[1]);
+
+		// Получаем список всех блоков для генерации
+		$jsonFiles = self::scanStorybookJson("{$srcPath}/block", $only_blocks);
+
+		if (0 < count($jsonFiles)) {
+			echo 'Генерация историй Storybook...', PHP_EOL, PHP_EOL;
+
+			foreach ($jsonFiles as $jsonFile) {
+				try {
+					$blockData = json_decode(file_get_contents($jsonFile), true);
+
+					if (!$blockData ||
+						!is_array($blockData) ||
+						(0 === count($blockData))) {
+						echo '!!! Не удалось прочитать данные из файла ', basename($jsonFile), PHP_EOL, PHP_EOL;
+						continue;
+					}
+
+					$blockName = $blockData['block'];
+					echo '... ', $blockName, PHP_EOL;
+
+					$params = [
+						'block' => $blockName,
+						'section' => isset($blockData['section']) ? $blockData['section'] : $projectName,
+						'title' => isset($blockData['title']) ?  $blockData['title'] : $blockName,
+						'parameters' => [],
+						'htmls' => [],
+						'args' => [],
+						'controls' => [],
+						'flags' => [
+							'all_overwrite' => &$all_overwrite,
+						],
+					];
+
+					$paramNames = [
+						'backgrounds',
+						'layout',
+					];
+
+					foreach ($paramNames as $paramName) {
+						if (isset($blockData[$paramName])) {
+							$params['parameters'][$paramName] = $blockData[$paramName];
+						}
+					}
+
+					foreach ($blockData['variants'] as $variantName => $variantParams) {
+						$tempVars = [];
+						$phpVars = [];
+						foreach ($variantParams['controls'] as $paramName => $paramData) {
+							$_control = null;
+							$value = isset($paramData['value']) ? $paramData['value'] : '';
+							if (is_array($value)) {
+								if (isset($value['control']) &&
+									(false === $value['control'])) {
+									$_control = false;
+									$value = '';
+								} else {
+									$_control = $value;
+									$value = '';
+								}
+							}
+
+							if (false !== $_control) {
+								if (!isset($params['args'][$variantName])) {
+									$params['args'][$variantName] = [];
+								}
+								if (!isset($params['controls'][$variantName])) {
+									$params['controls'][$variantName] = [];
+								}
+
+								$params['args'][$variantName][$paramName] = $value;
+
+								$value = isset($paramData['name']) ? ['name' => $paramData['name']] : [];
+								if ($_control && is_array($_control)) {
+									$value = array_merge($_control, $value);
+								}
+								$params['controls'][$variantName][$paramName] = $value;
+							}
+
+							if (isset($paramData['php'])) {
+								$_value = trim($paramData['php']);
+								if (';' !== mb_substr($_value, -1)) {
+									$_value .= ';';
+								}
+								$tempVars[$paramName] =  eval('return ' . $_value);
+								$phpVars[] = '"' . $paramName . '" => ' . $paramData['php'];
+							} else if (isset($paramData['var'])) {
+								$tempVars[$paramName] =  $paramData['var'];
+							} else {
+								$tempVars[$paramName] =  '@' . $paramName . '@';
+							}
+						}
+						$has_with = isset($blockData['with']);
+						$params['htmls'][$variantName] = [
+							'styles' => $has_with && isset($blockData['with']['styles']) ? $blockData['with']['styles'] : [],
+							'scripts' => $has_with && isset($blockData['with']['scripts']) ? $blockData['with']['scripts'] : [],
+							'vars' => $tempVars,
+							'replaces' => isset($variantParams['replaces']) ? $variantParams['replaces'] : [],
+							'php' => 0 < count($phpVars) ? implode(', ', $phpVars) : '',
+						];
+					}
+
+					$this->Init($srcPath, $params);
+					$this->Generate();
+
+					echo '... Ok', PHP_EOL;
+				} catch (\Error $e) {
+					echo '!!! ОШИБКА: ', $e->getMessage(), PHP_EOL;
+				}
+				echo PHP_EOL;
+			}
+
+			echo 'Генерация окончена!', PHP_EOL;
+		} else {
+			echo 'Нет блоков, требующих генерации историй Storybook.', PHP_EOL;
+		}
+	}
+
+
+	/**
+	 * Устанавливает данные истории блока для генератора
 	 *
 	 * @param  string $srcPath полный путь к папке src
 	 * @param  array  $params массив данных frontend блока - html-код, переменные, названия, значения по умолчанию
 	 * @param  array  $templates массив путей шаблонов
 	 * @return void
 	 */
-	public function __construct($srcPath, $params = [], $templates = []) {
+	public function Init($srcPath, $params = [], $templates = [])
+	{
 		$blockPath = trim($params['block'], '/');
 		$_parts = explode('/', $blockPath);
 		$this->blockName = end($_parts);
@@ -104,11 +317,12 @@ class Storybook {
 
 
 	/**
-	 * Генерирует story блока в папке stories
+	 * Генерирует историю блока в папке stories
 	 *
 	 * @return void
 	 */
-	public function Generate() {
+	public function Generate()
+	{
 		// Создание каталога
 		if (!file_exists($this->storyPath)) {
 			if (!mkdir($this->storyPath, 0775, true)) {
@@ -128,7 +342,8 @@ class Storybook {
 		// Создание html-файлов для story
 		$mainVariant = '';
 		foreach ($this->params['htmls'] as $variantName => $variantData) {
-			$htmlFile = "{$this->storyPath}/{$this->storyName}.{$variantName}.html";
+			$safeVariantName = $this->prepareSafeName($variantName);
+			$htmlFile = "{$this->storyPath}/{$this->storyName}.{$safeVariantName}.html";
 			$canOverwrite = $this->params['flags']['all_overwrite'];
 			if (file_exists($htmlFile)) {
 				echo static::PREFIX, static::ESC_RED_START, "html-шаблон {$variantName} блока {$this->blockName} уже существует", static::ESC_FINISH, PHP_EOL;
@@ -210,6 +425,11 @@ class Storybook {
 	}
 
 
+	/**
+	 * Формирует содержимое файла с html-кодом блока
+	 *
+	 * @return string
+	 */
 	private function buildHtml($variantName = 'Primary', $variantData = [])
 	{
 		$html = '';
@@ -233,21 +453,22 @@ class Storybook {
 
 
 	/**
-	 * Заполняет mdx шаблон данными
+	 * Заполняет данными mdx-шаблон раздела документации
 	 *
 	 * @return string
 	 */
-	private function buildMdx($variantName = 'Primary') {
+	private function buildMdx($variantName = 'Primary')
+	{
 		$php = '```php' . PHP_EOL . '<?= \TAO::frontend()->renderBlock(\'' . $this->params['block'] .'\'';
 		$vars = '';
 		if (isset($this->params['htmls'][$variantName]['php']) &&
 			$this->params['htmls'][$variantName]['php']) {
-			$vars = ', ' . $this->params['htmls'][$variantName]['php'];
+			$vars = ', [ ' . $this->params['htmls'][$variantName]['php'] . ' ]';
 		} else {
 			$varList = [];
 			if (isset($this->params['htmls'][$variantName]['vars'])) {
 				foreach ($this->params['htmls'][$variantName]['vars'] as $paramName => $paramValue) {
-					$q = '"';
+					$q = '\'';
 					if (is_array($paramValue)) {
 						$value = str_replace('\n', PHP_EOL, var_export($paramValue, true));
 						$q = '';
@@ -266,6 +487,9 @@ class Storybook {
 									} else {
 										$value = '';
 									}
+								} else if (!is_string($_value)) {
+									$value = var_export($_value, true);
+									$q = '';
 								} else {
 									$value = $_value;
 								}
@@ -277,7 +501,7 @@ class Storybook {
 						}
 					}
 					if ($q) {
-						$value = str_replace(["\n", '"'], ['\n', '\"'], $value);
+						$value = str_replace(["\n", "'"], ['\n', '\\\''], $value);
 					}
 					$varList[] = '\'' . $paramName . '\' => ' . $q . $value . $q . ',';
 				}
@@ -295,7 +519,7 @@ class Storybook {
 		$jsContent = file_exists($jsFile) ? '```js' . PHP_EOL . file_get_contents($jsFile) . PHP_EOL . '```' : '*У блока отсутствуют сценарии.*';
 
 		$scssFile = "{$this->blockPath}.scss";
-		$scssContent = file_exists($scssFile) ? '```css' . PHP_EOL . file_get_contents($scssFile) . PHP_EOL . '```' : '*У блока отсутствуют стили.*';
+		$scssContent = file_exists($scssFile) ? '```scss' . PHP_EOL . file_get_contents($scssFile) . PHP_EOL . '```' : '*У блока отсутствуют стили.*';
 
 		$content = file_get_contents($this->templates['docs_template']);
 
@@ -311,13 +535,14 @@ class Storybook {
 
 
 	/**
-	 * Заполняет js шаблон данными
+	 * Заполняет данными js-шаблон сценария истории блока
 	 *
 	 * @return string
 	 */
-	private function buildStory() {
-		$story_section = $this->params['section'];
-		$story_title = $this->params['title'];
+	private function buildStory()
+	{
+		$story_section = str_replace('"', '\"', $this->params['section']);
+		$story_title = str_replace('"', '\"', $this->params['title']);
 
 		$story_template = file_get_contents($this->templates['stories_template']);
 
@@ -330,8 +555,9 @@ class Storybook {
 
 		// Добавляем импорт html шаблонов
 		foreach ($variantsList as $variantName) {
+			$safeVariantName = $this->prepareSafeName($variantName);
 			$story_template = implode([
-				"import html{$variantName} from \"./{$this->storyName}.{$variantName}.html\";" . PHP_EOL,
+				"import html{$safeVariantName} from \"./{$this->storyName}.{$safeVariantName}.html\";" . PHP_EOL,
 				$story_template,
 			]);
 		}
@@ -409,7 +635,11 @@ class Storybook {
 					}
 					$_value = $this->params['htmls'][$variantName]['vars'][$_name];
 					if (!is_string($_value)) {
-						continue;
+						if (is_array($_value) ||
+							is_object($_value)) {
+							continue;
+						}
+						$_value = var_export($_value, true);
 					}
 					if (isset($this->params['htmls'][$variantName]['replaces']) &&
 						($_replaces = $this->params['htmls'][$variantName]['replaces']) &&
@@ -436,7 +666,9 @@ class Storybook {
 				}
 			}
 
-			$variant_template = str_replace("@variant_name@", $variantName, $variant_template);
+			$safeVariantName = $this->prepareSafeName($variantName);
+
+			$variant_template = str_replace("@variant_name@", $safeVariantName, $variant_template);
 			$_indent = PHP_EOL . "\t\t\t";
 			$variant_template = str_replace(
 				"@replaces@",
@@ -452,7 +684,7 @@ class Storybook {
 			// Формирование аргументов
 			$vars = isset($this->params['args'][$variantName]) ? json_encode($this->params['args'][$variantName], JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE) : '{}';
 			$controls_template = str_replace("@args@", $vars, $controls_template);
-			$controls_template = str_replace("@name@", $variantName, $controls_template);
+			$controls_template = str_replace("@name@", $safeVariantName, $controls_template);
 
 			$controls = isset($this->params['controls'][$variantName]) ? json_encode($this->params['controls'][$variantName], JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE) : '{}';
 			$controls_template = str_replace("@args_types@", $controls, $controls_template);
@@ -470,6 +702,13 @@ class Storybook {
 	}
 
 
+	/**
+	 * Выполняет специальные подмены в html-коде блока
+	 *
+	 * @param string $variantName название варианта истории
+	 * @param string содержимое html-кода блока
+	 * @return string
+	 */
 	private function makeReplaces($variantName, $html)
 	{
 		if (isset($this->params['htmls'][$variantName]) &&
@@ -489,6 +728,25 @@ class Storybook {
 	}
 
 
+	/**
+	 * Удаляет опасные символы в названии варианта для использования в именах файлов и переменных js-сценария
+	 *
+	 * @param string $name название варианта
+	 * @return string
+	 */
+	private function prepareSafeName($name = '')
+	{
+		return $name ? str_replace([' ', '-'], '_', $name) : '';
+	}
+
+
+	/**
+	 * Запрашивает у пользователя подтверждение перезаписи файла
+	 * с сохранением вариантов "для всех" в настройках работы генератора
+	 *
+	 * @param bool|string $fn имя файла (необязательный параметр)
+	 * @return string
+	 */
 	protected function getOverwritePermission($fn = false)
 	{
 		$answer = '';
